@@ -12,7 +12,8 @@ from typing import Any
 ORDERS_DIR = Path("orders")
 REPLIES_DIR = Path("replies")
 
-VALID_DURATIONS = {4, 6, 8}
+MIN_SCENE_SECONDS = 3  # guide.md: ฉากละ 3–6 วินาที
+MAX_SCENE_SECONDS = 6
 
 FORBIDDEN_WORDS = [
     "ดีที่สุด",
@@ -95,8 +96,8 @@ def validate_work_order(wo: dict[str, Any]) -> list[str]:
         dur = sc["duration"]
         vp = sc["visual_prompt"]
 
-        if dur not in VALID_DURATIONS:
-            issues.append(f"ฉาก {s_no}: ความยาว {dur} วินาที ไม่ตรงกติกา (ต้องเป็น 4, 6 หรือ 8 วินาทีเท่านั้น)")
+        if not (MIN_SCENE_SECONDS <= dur <= MAX_SCENE_SECONDS):
+            issues.append(f"ฉาก {s_no}: ความยาว {dur} วินาที ไม่ตรงกติกา (ต้องอยู่ระหว่าง 3–6 วินาที)")
         total_dur += dur
 
         for pat, reason in VISUAL_RISK_PATTERNS:
