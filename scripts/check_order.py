@@ -159,11 +159,12 @@ def build_reply_markdown(wo: dict[str, Any], issues: list[str]) -> str:
     ]
 
     for sc in scenes:
+        # The order's visual prompt already carries the style and "no text/logo/face"
+        # rules, so only add the aspect ratio if it is missing, plus the duration.
         vp = sc["visual_prompt"].rstrip(".")
-        ready_prompt = (
-            f"{vp}. Vertical 9:16, {sc['duration']} seconds, warm home aesthetic, "
-            "soft healing lighting, strictly no text, no letters, no logos, no identifiable real faces."
-        )
+        if "9:16" not in vp:
+            vp = f"Vertical 9:16. {vp}"
+        ready_prompt = f"{vp}. {sc['duration']} seconds."
         lines.extend([
             f"### ฉาก {sc['scene_no']} ({sc['duration']} วินาที)",
             "**พรอมต์วิดีโอ:**",
