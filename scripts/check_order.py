@@ -11,6 +11,7 @@ from typing import Any
 
 ORDERS_DIR = Path("orders")
 REPLIES_DIR = Path("replies")
+OWNER_NOTES_DIR = Path("owner-notes")
 
 MIN_SCENE_SECONDS = 3  # guide.md: ฉากละ 3–6 วินาที
 MAX_SCENE_SECONDS = 6
@@ -118,7 +119,8 @@ def validate_work_order(wo: dict[str, Any]) -> list[str]:
             last_scene.get("screen_text", ""),
             last_scene.get("raw_block", ""),
         ])
-        if "1323" not in last_text:
+        owner_text = wo.get("owner_text", "")
+        if "1323" not in last_text and "1323" not in owner_text:
             tail_idx = raw_text.rfind(f"ฉาก {last_scene['scene_no']}")
             tail_text = raw_text[tail_idx:] if tail_idx != -1 else last_text
             if "1323" not in tail_text:
@@ -175,6 +177,18 @@ def build_reply_markdown(wo: dict[str, Any], issues: list[str]) -> str:
     return "\n".join(lines)
 
 
+def load_owner_notes(clip_code: str) -> str:
+    """Return owner-notes text for this clip (matched by clip code in the file)."""
+    if not OWNER_NOTES_DIR.exists():
+        return ""
+    texts = []
+    for path in sorted(OWNER_NOTES_DIR.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        if clip_code and clip_code in text:
+            texts.append(text)
+    return "\n".join(texts)
+
+
 def main() -> None:
     if not ORDERS_DIR.exists():
         print("No orders/ directory found.")
@@ -189,6 +203,7 @@ def main() -> None:
     for order_path in order_files:
         md_text = order_path.read_text(encoding="utf-8")
         wo = parse_work_order(md_text, order_path.stem)
+        wo["owner_text"] = load_owner_notes(wo["clip_code"])
         issues = validate_work_order(wo)
         reply_md = build_reply_markdown(wo, issues)
 
